@@ -1,0 +1,14 @@
+[package]
+name = "ps-util"
+version = "0.1.0"
+authors = ["elbaro <elbaro@github>"]
+
+[[bin]]
+name = "psutil"
+
+[dependencies]
+clap = "*"
+rand = "*"
+num-traits = "*"
+piston2d-graphics = "*"
+piston_window = "*"
