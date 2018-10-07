@@ -2,9 +2,11 @@
 name = "ps-util"
 version = "0.1.0"
 authors = ["elbaro <elbaro@github>"]
+edition = "2018"
 
 [[bin]]
 name = "psutil"
+path = "src/main.rs"
 
 [dependencies]
 clap = "*"
@@ -12,3 +14,8 @@ rand = "*"
 num-traits = "*"
 piston2d-graphics = "*"
 piston_window = "*"
+indoc = "*"
+chrono = "*"
+walkdir = "*"
+tempfile = "*"
+colored = "1.6.1"
