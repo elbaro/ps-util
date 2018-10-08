@@ -19,3 +19,9 @@ chrono = "*"
 walkdir = "*"
 tempfile = "*"
 colored = "1.6.1"
+select = "0.4.2"
+reqwest = "0.9.2"
+
+[build-dependencies]
+clap = "*"
+indoc = "*"
