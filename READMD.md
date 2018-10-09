@@ -45,8 +45,8 @@ psutil sanitize data/A --ext txt,in,out --confirmed
 check for data format (recommends testlib)
 
 ```
-psutil validate ./input_validator data/A --ext in
-psutil validate ./output_validator data/A --ext out
+psutil validate ./input_validator data/A --filter ".*\\.in"
+psutil validate ./output_validator data/A --filter ".*\\.out"
 ```
 
 check the solution
@@ -57,10 +57,13 @@ psutil eval ./solution data/A --ext in --eval ./eval
 ```
 
 
-
-
-
 ## Judge
+
+```
+psutil new
+psutil new --from cf 1004H
+psutil submit cf 1004H code.cpp
+```
 
 | submit |      |      |          |
 | ------ | ---- | ---- | -------- |

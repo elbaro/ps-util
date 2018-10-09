@@ -6,9 +6,14 @@ mod generate;
 use self::generate::Range;
 mod codeforces;
 mod judge;
+use self::judge::*;
+mod runner;
 mod sanitize;
 
-use self::judge::*;
+mod sandbox;
+
+use std::fs::File;
+use std::io::Write;
 
 /**
  * ProblemSet
@@ -95,12 +100,38 @@ fn main() {
 			let confirmed = sub.matches.is_present("confirmed");
 			sanitize::sanitize(path, exts, confirmed);
 		}
+		"validate" => {
+			let path = sub.matches.value_of("validator").unwrap();
+			let paths: Vec<&str> = sub.matches.values_of("paths").unwrap().collect();
+			let filter = sub.matches.value_of("filter");
+			runner::validate(path, paths, filter).unwrap();
+		}
+		"eval" => {
+			let path = sub.matches.value_of("validator").unwrap();
+			let data_dir = sub.matches.value_of("data").unwrap();
+
+			let time_limit: Option<f32> = sub
+				.matches
+				.value_of("time-limit")
+				.map(|s| s.parse().expect("cannot read time limit"));
+			let memory_limit: Option<u64> = sub
+				.matches
+				.value_of("memory-limit")
+				.map(|s| s.parse().expect("cannot read memory limit"));
+			// runner::eval(path, data_dir).unwrap();
+			unimplemented!();
+		}
 		"new" => {
 			// psutil new dir/prob1 --python
 			// psutil new ps --download cf 1060H
 
-			let path = sub.matches.value_of("path").unwrap();
+			let path = Path::new(sub.matches.value_of("path").unwrap());
 			std::fs::create_dir_all(path).unwrap();
+
+			{
+				let mut f = File::create(path.join("code.cpp")).unwrap();
+				f.write_all(include_bytes!("static/code.cpp")).unwrap();
+			}
 
 			if let Some(from) = sub.matches.values_of("from") {
 				let from: Vec<&str> = from.collect();
@@ -135,18 +166,15 @@ fn main() {
 			);
 			unimplemented!();
 		}
-		"acmicpc" => {
-			unimplemented!();
-		}
-		"codeforces" => {
-			unimplemented!();
-		}
-		"topcoder" => {
-			unimplemented!();
-		}
-		"prepare" => {
-			unimplemented!();
-		}
+		// "acmicpc" => {
+		// 	unimplemented!();
+		// }
+		// "codeforces" => {
+		// 	unimplemented!();
+		// }
+		// "topcoder" => {
+		// 	unimplemented!();
+		// }
 		"visualize" => {
 			unimplemented!();
 		}

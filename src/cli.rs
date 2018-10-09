@@ -53,6 +53,30 @@ pub fn build_cli() -> App<'static, 'static> {
 			SubCommand::with_name("contest").about("Overview of upcoming or recent contests"),
 		)
 		.subcommand(
+			SubCommand::with_name("validate")
+				.arg(Arg::with_name("validator").index(1).required(true))
+				.arg(
+					Arg::with_name("paths")
+						.index(2)
+						.required(true)
+						.takes_value(true)
+						.multiple(true),
+				)
+				.arg(Arg::with_name("filter").long("filter").takes_value(true)),
+		)
+		.subcommand(
+			SubCommand::with_name("eval")
+				.arg(Arg::with_name("solution").index(1).required(true))
+				.arg(Arg::with_name("data_dir").index(2).required(true))
+				.arg(Arg::with_name("eval"))
+				.arg(Arg::with_name("time-limit").long("time").takes_value(true))
+				.arg(
+					Arg::with_name("memory-limit")
+						.long("memory")
+						.takes_value(true),
+				),
+		)
+		.subcommand(
 			SubCommand::with_name("new")
 				.arg(Arg::with_name("path").index(1).required(true))
 				.arg(

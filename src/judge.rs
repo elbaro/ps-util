@@ -17,6 +17,7 @@ pub trait ProblemHandle {
 	fn submit<P: AsRef<Path>>(&self, path: P) {
 		let path = path.as_ref();
 		let url = self.get_submit_url();
+		unimplemented!();
 		// client.post(url).unwrap();
 	}
 	fn download<P: AsRef<Path>>(&self, dir: P) -> Result<(), Box<Error>>;
