@@ -45,15 +45,15 @@ psutil sanitize data/A --ext txt,in,out --confirmed
 check for data format (recommends testlib)
 
 ```
-psutil validate ./input_validator data/A --filter ".*\\.in"
-psutil validate ./output_validator data/A --filter ".*\\.out"
+psutil validate ./input_validator data/A --filter .in
+psutil validate ./output_validator data/A --filter .out
 ```
 
 check the solution
 
 ```
-psutil eval ./solution data/A --ext in
-psutil eval ./solution data/A --ext in --eval ./eval
+psutil eval ./solution data/A --in .in --out .out
+psutil eval ./solution data/A  --eval ./eval
 ```
 
 

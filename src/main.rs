@@ -1,3 +1,5 @@
+#![feature(duration_float)]
+
 use piston_window::*;
 use std::path::Path;
 
@@ -14,6 +16,8 @@ mod sandbox;
 
 use std::fs::File;
 use std::io::Write;
+
+use crate::sandbox::Limitation;
 
 /**
  * ProblemSet
@@ -107,19 +111,39 @@ fn main() {
 			runner::validate(path, paths, filter).unwrap();
 		}
 		"eval" => {
-			let path = sub.matches.value_of("validator").unwrap();
-			let data_dir = sub.matches.value_of("data").unwrap();
+			let solution = sub.matches.value_of("solution").unwrap();
+			let data_dir = sub.matches.value_of("data_dir").unwrap();
+			let solution = Path::new(solution);
+			let data_dir = Path::new(data_dir);
 
-			let time_limit: Option<f32> = sub
+			let in_filter = sub.matches.value_of("in").unwrap();
+			let out_filter = sub.matches.value_of("out").unwrap();
+
+			if !solution.is_file() {
+				panic!("solution does not exist: {}", solution.display());
+			}
+
+			if !data_dir.is_dir() {
+				panic!("data_dir is not a directory: {}", data_dir.display());
+			}
+
+			let time: Option<f32> = sub
 				.matches
 				.value_of("time-limit")
 				.map(|s| s.parse().expect("cannot read time limit"));
-			let memory_limit: Option<u64> = sub
+			let memory_mb: Option<u64> = sub
 				.matches
 				.value_of("memory-limit")
 				.map(|s| s.parse().expect("cannot read memory limit"));
-			// runner::eval(path, data_dir).unwrap();
-			unimplemented!();
+			if let Some(m) = memory_mb {
+				if m > 4096 {
+					panic!("Provide memory in (MB).");
+				}
+			}
+
+			let limit = Limitation { time, memory_mb };
+
+			runner::eval(solution, data_dir, in_filter, out_filter, &limit).unwrap();
 		}
 		"new" => {
 			// psutil new dir/prob1 --python

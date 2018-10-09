@@ -1,11 +1,18 @@
 use libc::{rlimit, rlimit64, setrlimit, setrlimit64};
 use std::error::Error;
 
-pub fn set_limits(time: Option<f32>, memory: Option<u64>) -> Result<(), Box<Error>> {
+#[derive(Clone)]
+pub struct Limitation {
+	pub time: Option<f32>,
+	pub memory_mb: Option<u64>,
+}
+
+pub fn set_limits(limit: &Limitation) -> Result<(), Box<Error>> {
 	// time
-	let time = time.unwrap_or(1.0).ceil() as u64;
+	let time = limit.time.unwrap_or(1.0).ceil() as u64;
 
 	unsafe {
+		// cpu time
 		if setrlimit(
 			libc::RLIMIT_CPU,
 			&rlimit {
@@ -17,9 +24,29 @@ pub fn set_limits(time: Option<f32>, memory: Option<u64>) -> Result<(), Box<Erro
 			return Err("error setting limit".into());
 		}
 
-		// core
+		// wallclock
+
+		// let mut action: libc::sigaction = std::mem::zeroed();
+		// action.sa_sigaction = self_terminate as usize;
+		// action.sa_flags = libc::SA_RESETHAND | libc::SA_RESTART;
+		// action.sa_mask = {
+		// 	let mut mask: libc::sigset_t = std::mem::uninitialized();
+		// 	libc::sigemptyset(&mut mask);
+		// 	if libc::sigaddset(&mut mask, libc::SIGALRM) != 0 {
+		// 		return Err("error setting wallclock limit".into());
+		// 	}
+		// 	if libc::sigaddset(&mut mask, libc::SIGTERM) != 0 {
+		// 		return Err("error setting wallclock limit".into());
+		// 	}
+		// 	mask
+		// };
+		// if libc::sigaction(libc::SIGALRM, &action, std::ptr::null_mut()) != 0 {
+		// 	return Err("error setting wallclock limit".into());
+		// }
+
+		// single thread
 		if setrlimit(
-			libc::RLIMIT_CORE,
+			libc::RLIMIT_NPROC,
 			&rlimit {
 				rlim_cur: 1,
 				rlim_max: 1,
@@ -30,12 +57,12 @@ pub fn set_limits(time: Option<f32>, memory: Option<u64>) -> Result<(), Box<Erro
 		}
 
 		// memory
-		if let Some(m) = memory {
+		if let Some(m) = limit.memory_mb {
 			if setrlimit64(
 				libc::RLIMIT_AS,
 				&rlimit64 {
-					rlim_cur: m,
-					rlim_max: m,
+					rlim_cur: m * 1024 * 1024,
+					rlim_max: m * 1024 * 1024,
 				},
 			) < 0
 			{
@@ -44,17 +71,25 @@ pub fn set_limits(time: Option<f32>, memory: Option<u64>) -> Result<(), Box<Erro
 		}
 
 		// opend file
-		if setrlimit(
-			libc::RLIMIT_NOFILE,
-			&rlimit {
-				rlim_cur: 4,
-				rlim_max: 4,
-			},
-		) < 0
-		{
-			return Err("error setting limit".into());
-		}
+		// problem: inherit judge's fd, shared libs, etc.
+		// if setrlimit(
+		// 	libc::RLIMIT_NOFILE,
+		// 	&rlimit {
+		// 		rlim_cur: 4,
+		// 		rlim_max: 4,
+		// 	},
+		// ) < 0
+		// {
+		// 	return Err("error setting limit".into());
+		// }
 	}
 
 	Ok(())
 }
+
+// extern "C" fn self_terminate(sig: libc::c_int) {
+// 	if sig == libc::SIGALRM {
+// 		eprintln!("[child process] self destroying");
+// 		std::process::abort();
+// 	}
+// }

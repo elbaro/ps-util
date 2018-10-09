@@ -65,10 +65,29 @@ pub fn build_cli() -> App<'static, 'static> {
 				.arg(Arg::with_name("filter").long("filter").takes_value(true)),
 		)
 		.subcommand(
+			// psutil eval ./a.out data/A/*.in data/B/*.out --time 0.5 --memory 64
 			SubCommand::with_name("eval")
 				.arg(Arg::with_name("solution").index(1).required(true))
-				.arg(Arg::with_name("data_dir").index(2).required(true))
-				.arg(Arg::with_name("eval"))
+				.arg(
+					Arg::with_name("data_dir")
+						.index(2)
+						.required(true)
+						.takes_value(true)
+						.multiple(true),
+				)
+				.arg(
+					Arg::with_name("in")
+						.long("in")
+						.required(true)
+						.takes_value(true),
+				)
+				.arg(
+					Arg::with_name("out")
+						.long("out")
+						.required(true)
+						.takes_value(true),
+				)
+				.arg(Arg::with_name("eval").long("eval").takes_value(true))
 				.arg(Arg::with_name("time-limit").long("time").takes_value(true))
 				.arg(
 					Arg::with_name("memory-limit")
