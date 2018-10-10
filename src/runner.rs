@@ -134,8 +134,15 @@ pub fn eval_case<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
 		let judge: bool = {
 			let stdout = child.stdout.take();
 			let user_it = stdout.unwrap().bytes().map(|e| e.unwrap());
-			let ans_it = answer.bytes().map(|e| e.unwrap());
-			user_it.eq(ans_it)
+			let ans_it = answer.bytes().map(|e| e.unwrap()); // LF only
+
+			if cfg!(windows) {
+				let user_it = user_it.filter(|b| *b != b'\r'); // LF? CRLF? ignore CR
+				let ans_it = ans_it.filter(|b| *b != b'\r'); // LF? CRLF? ignore CR
+				user_it.eq(ans_it)
+			} else {
+				user_it.eq(ans_it)
+			}
 		};
 		if judge {
 			Ok(JudgeResult::Correct)
