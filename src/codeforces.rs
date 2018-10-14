@@ -1,10 +1,15 @@
 use chrono::{DateTime, Utc};
 use crate::judge;
+use crate::judge::Site;
+use crate::session::Session;
 use select::{document::Document, predicate::Class};
+// use selenium_rs::webdriver::{Browser, Selector, WebDriver};
+use fantoccini::{error::CmdError, Client as Driver, Locator};
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+
 /**
  * Set:
  *
@@ -27,12 +32,6 @@ enum ContestStatus {
 	Running,
 	Finished,
 }
-
-// TODO: add group
-// enum ContestHandle {
-// 	Contest(u32),
-// 	GroupContest(u32),
-// }
 
 pub struct ContestHandle(pub u32);
 
@@ -100,4 +99,97 @@ impl judge::ProblemHandle for ProblemHandle {
 		}
 		Ok(())
 	}
+
+	fn submit<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<Error>> {
+		let mut session = Session::new()?;
+		Codeforces::login(&mut session, "aa", "bb")?;
+
+		// let path = path.as_ref();
+		// let login = &Url::parse("https://algospot.com/accounts/login/")?;
+		// let login = &Url::parse("https://codeforces.com/enter")?;
+		// let mut session = Session::new();
+		// session.get(login)?;
+
+		// let csrf_token = session
+		// 	.get_cookie(login, "csrftoken")
+		// 	.expect("no csrf token received");
+		// let form = {
+		// 	let mut h = HashMap::new();
+		// 	h.insert("username", "aa");
+		// 	h.insert("password", "bb");
+		// 	h.insert("csrfmiddlewaretoken", &csrf_token);
+		// 	h
+		// };
+
+		// let form = {
+		// 	let mut h = HashMap::new();
+		// 	h.insert("handleOrEmail", "aa");
+		// 	h.insert("password", "bb");
+		// 	h.insert("action", "enter");
+		// 	h.insert("csrfmiddlewaretoken", &csrf_token);
+		// 	h
+		// };
+
+		// let mut res = session.post(login, Some(&form))?;
+		// println!("{}", res.text()?);
+		Ok(())
+	}
 }
+
+async fn login_async<'a>(
+	session: &'a mut Session,
+	id: &'a str,
+	pw: &'a str,
+) -> Result<(), CmdError> {
+	let mut driver: Driver = unsafe { std::mem::uninitialized() };
+	std::mem::swap(&mut session.driver, &mut driver);
+
+	let mut driver = await!(driver.goto("https://codeforces.com/enter"))?;
+	let mut f = await!(driver.form(Locator::Css("#enterForm")))?;
+	await!(f.set_by_name("handleOrEmail", "abc"))?;
+	await!(f.set_by_name("password", "abcefg"))?;
+	await!(f.submit())?;
+
+	// driver.navigate("https://codeforces.com/enter")?;
+	// // already logged in?
+	// let handle_input = driver.query_element(Selector::CSS, "#handleOrEmail")?;
+	// let pw_input = driver.query_element(Selector::CSS, "#password")?;
+	// let submit = driver.query_element(Selector::CSS, ".submit")?;
+	// handle_input.type_text(id)?;
+	// pw_input.type_text(pw)?;
+	// submit.click()?;
+
+	std::mem::swap(&mut session.driver, &mut driver);
+	Ok(())
+}
+
+async fn login_impl<'a>(session: &'a mut Session, id: &'a str, pw: &'a str) {
+	match await!(login_async(session, id, pw)) {
+		Ok(()) => {}
+		Err(err) => {
+			eprintln!("login error: {}", err);
+		}
+	};
+}
+
+pub struct Codeforces {}
+
+impl judge::Site for Codeforces {
+	fn login(
+		session: &'static mut Session,
+		id: &'static str,
+		pw: &'static str,
+	) -> Result<(), Box<Error + 'static>> {
+		// run_async requires 'static future
+		tokio::run_async(login_impl(session, id, pw));
+		Ok(())
+	}
+}
+
+// type mismatch resolving `<impl std::future::Future as std::future::Future>::Output == ()`
+
+// expected enum `std::result::Result`, found ()
+
+// note: expected type `std::result::Result<(), fantoccini::error::CmdError>`
+//          found type `()`
+// note: required by `tokio::run_async`

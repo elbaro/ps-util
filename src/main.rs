@@ -1,4 +1,7 @@
 #![feature(duration_float)]
+#![feature(await_macro, async_await, futures_api)]
+#[macro_use]
+extern crate tokio;
 
 use piston_window::*;
 use std::path::Path;
@@ -13,6 +16,7 @@ mod runner;
 mod sanitize;
 
 mod sandbox;
+mod session;
 
 use std::fs::File;
 use std::io::Write;
@@ -182,13 +186,22 @@ fn main() {
 		"submit" => {
 			sub.matches.value_of("vendor");
 			sub.matches.value_of("prob");
-			let code_path = sub.matches.value_of("code").unwrap();
+			let path = sub.matches.value_of("code").unwrap();
 			assert!(
-				Path::new(code_path).exists(),
+				Path::new(path).exists(),
 				"code does not exist:\n\t=>{}",
-				&code_path
+				&path
 			);
-			unimplemented!();
+			let p = codeforces::ProblemHandle(1004, 'A');
+
+			match p.submit(path) {
+				Ok(_) => {
+					println!("Submitted.");
+				}
+				Err(err) => {
+					println!("Submission error: {}", err);
+				}
+			}
 		}
 		// "acmicpc" => {
 		// 	unimplemented!();
