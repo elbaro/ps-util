@@ -1,7 +1,6 @@
 use colored::*;
 use crate::sandbox;
 use crate::sandbox::Limitation;
-use std::error::Error;
 use std::fs::File;
 use std::io::Read;
 use std::os::unix::process::CommandExt;
@@ -12,6 +11,18 @@ use strum_macros::Display;
 use wait_timeout::ChildExt;
 use walkdir::WalkDir;
 
+use error_chain::error_chain;
+use error_chain::error_chain_processing;
+use error_chain::impl_error_chain_kind;
+use error_chain::impl_error_chain_processed;
+use error_chain::impl_extract_backtrace;
+
+error_chain!{
+	foreign_links {
+		IoError(std::io::Error);
+	}
+}
+
 #[derive(Display)]
 pub enum JudgeResult {
 	Correct,
@@ -21,10 +32,7 @@ pub enum JudgeResult {
 	RuntimeError,
 }
 
-pub fn validate_data<P1: AsRef<Path>, P2: AsRef<Path>>(
-	exe_path: P1,
-	data_path: P2,
-) -> Result<(), Box<Error>> {
+pub fn validate_data<P1: AsRef<Path>, P2: AsRef<Path>>(exe_path: P1, data_path: P2) -> Result<()> {
 	let data_path = data_path.as_ref();
 	let f: File = File::open(&data_path).expect("fail to open file");
 
@@ -40,11 +48,7 @@ pub fn validate_data<P1: AsRef<Path>, P2: AsRef<Path>>(
 	}
 }
 
-pub fn validate<P: AsRef<Path>>(
-	exe_path: P,
-	paths: Vec<&str>,
-	filter: Option<&str>,
-) -> Result<(), Box<Error>> {
+pub fn validate<P: AsRef<Path>>(exe_path: P, paths: Vec<&str>, filter: Option<&str>) -> Result<()> {
 	let exe_path = exe_path.as_ref();
 	println!("{}", "Validating ..".green());
 
@@ -103,24 +107,46 @@ pub fn eval_case<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
 	input: P2,
 	answer: P3,
 	limit: &Limitation,
-) -> Result<JudgeResult, Box<Error>> {
+) -> Result<JudgeResult> {
 	let input = input.as_ref();
-	let f: File = File::open(&input).expect("fail to open file");
+	let solution: &Path = solution.as_ref();
+	let f: File = File::open(&input).chain_err(|| "fail to open input file")?;
 
-	let answer = File::open(&answer)?;
+	let answer = File::open(&answer).chain_err(|| "fail to open answer file")?;
 	let child_limit = limit.clone();
 
-	let mut child = Command::new(solution.as_ref())
+	let is_java = {
+		let ext: Option<&str> = solution.extension().and_then(|s| s.to_str());
+		ext.is_some() && ext.unwrap() == "class"
+	};
+
+	let mut cmd = {
+		if is_java {
+			let mut c = Command::new("java");
+			let cp = solution.parent().and_then(|p| p.to_str()).unwrap_or(".");
+			let stem = solution.file_stem().unwrap().to_str().unwrap();
+			// println!("{:?}", &["-cp", cp, stem]);
+			c.args(&["-cp", cp, stem]);
+			c
+		} else {
+			Command::new(solution)
+		}
+	};
+	let mut child = cmd
 		.stdin(f)
 		.stdout(Stdio::piped())
 		.before_exec(move || {
 			sandbox::set_limits(&child_limit).unwrap();
 			Ok(())
 		})
-		.spawn()?; // judge error
+		.spawn()?;
+	// .chain_err(|| "fail to spawn solution process")?; // judge error
 
 	let time = Duration::from_float_secs(limit.time.unwrap_or(1.0) as f64);
-	let success = match child.wait_timeout(time)? {
+	let success = match child
+		.wait_timeout(time)
+		.chain_err(|| "fail to wait for solution process")?
+	{
 		Some(status) => status.success(),
 		None => {
 			child.kill()?;
@@ -161,7 +187,7 @@ pub fn eval<P1: AsRef<Path>, P2: AsRef<Path>>(
 	in_filter: &str,
 	out_filter: &str,
 	limit: &Limitation,
-) -> Result<(), Box<Error>> {
+) -> Result<()> {
 	println!("{}\n", "Evaluating ..".green());
 	let solution = solution.as_ref();
 	let data_dir = data_dir.as_ref();

@@ -23,7 +23,7 @@ impl Drop for BrowserGuard {
 pub struct Session {
 	browser: BrowserGuard,
 	client: Client,
-	pub driver: Driver,
+	// pub driver: Driver,
 	pub jar: CookieJar,
 	last_url: Option<String>,
 }
@@ -31,9 +31,9 @@ pub struct Session {
 impl Session {
 	pub fn new() -> Result<Self, Box<Error>> {
 		let browser = BrowserGuard(
-			Command::new("chromedriver")
-				// Command::new("echo")
-				.args(&["--port=4444"])
+			// Command::new("chromedriver")
+			Command::new("geckodriver")
+				// .args(&["--port=4444"])
 				// .args(&["--port=4444", "--url-base=wd/hub"])
 				// Command::new("geckodriver")
 				.stdin(Stdio::piped())
@@ -41,17 +41,13 @@ impl Session {
 				.spawn()?,
 		);
 
-		println!("connecting to driver ..");
-		let driver = Driver::new("http://localhost:4444").wait()?;
-		println!("connecting to driver .. done");
-
 		// let mut driver = WebDriver::new(Browser::Firefox);
 		// let mut driver = WebDriver::new(Browser::Chrome);
 		// driver.start_session()?;
 
 		Ok(Session {
 			browser,
-			driver,
+			// driver,
 			client: Client::new(),
 			jar: CookieJar::new(),
 			last_url: None,

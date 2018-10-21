@@ -25,5 +25,5 @@ pub trait ProblemHandle {
 }
 
 pub trait Site {
-	fn login(session: &mut Session, id: &str, pw: &str) -> Result<(), Box<Error>>;
+	fn login(id: &str, pw: &str) -> Result<(), Box<Error>>;
 }

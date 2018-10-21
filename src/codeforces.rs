@@ -4,7 +4,7 @@ use crate::judge::Site;
 use crate::session::Session;
 use select::{document::Document, predicate::Class};
 // use selenium_rs::webdriver::{Browser, Selector, WebDriver};
-use fantoccini::{error::CmdError, Client as Driver, Locator};
+use fantoccini::{Client as Driver, Locator};
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
@@ -102,7 +102,8 @@ impl judge::ProblemHandle for ProblemHandle {
 
 	fn submit<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<Error>> {
 		let mut session = Session::new()?;
-		Codeforces::login(&mut session, "aa", "bb")?;
+		println!("this is submit()");
+		Codeforces::login("aa", "bb")?;
 
 		// let path = path.as_ref();
 		// let login = &Url::parse("https://algospot.com/accounts/login/")?;
@@ -136,19 +137,27 @@ impl judge::ProblemHandle for ProblemHandle {
 	}
 }
 
-async fn login_async<'a>(
-	session: &'a mut Session,
-	id: &'a str,
-	pw: &'a str,
-) -> Result<(), CmdError> {
-	let mut driver: Driver = unsafe { std::mem::uninitialized() };
-	std::mem::swap(&mut session.driver, &mut driver);
+async fn login_async<'a>(id: String, pw: String) -> Result<(), Box<Error + 'static>> {
+	// let mut driver: Driver = unsafe { std::mem::uninitialized() };
+	// std::mem::swap(&mut session.driver, &mut driver);
 
+	let cap = serde_json::from_str(
+		"{}"
+	// 	r#"
+	// 	{"moz:firefoxOptions":{"args":["-headless"]}}
+	// "#,
+	)?;
+
+	println!("connecting to driver ..");
+	let mut driver = await!(Driver::with_capabilities("http://localhost:4444", cap))?;
+	println!("connecting to driver .. done");
 	let mut driver = await!(driver.goto("https://codeforces.com/enter"))?;
 	let mut f = await!(driver.form(Locator::Css("#enterForm")))?;
 	await!(f.set_by_name("handleOrEmail", "abc"))?;
 	await!(f.set_by_name("password", "abcefg"))?;
 	await!(f.submit())?;
+
+	std::thread::sleep_ms(5000);
 
 	// driver.navigate("https://codeforces.com/enter")?;
 	// // already logged in?
@@ -159,12 +168,12 @@ async fn login_async<'a>(
 	// pw_input.type_text(pw)?;
 	// submit.click()?;
 
-	std::mem::swap(&mut session.driver, &mut driver);
+	// std::mem::swap(&mut session.driver, &mut driver);
 	Ok(())
 }
 
-async fn login_impl<'a>(session: &'a mut Session, id: &'a str, pw: &'a str) {
-	match await!(login_async(session, id, pw)) {
+async fn login_impl(id: String, pw: String) {
+	match await!(login_async(id, pw)) {
 		Ok(()) => {}
 		Err(err) => {
 			eprintln!("login error: {}", err);
@@ -175,13 +184,8 @@ async fn login_impl<'a>(session: &'a mut Session, id: &'a str, pw: &'a str) {
 pub struct Codeforces {}
 
 impl judge::Site for Codeforces {
-	fn login(
-		session: &'static mut Session,
-		id: &'static str,
-		pw: &'static str,
-	) -> Result<(), Box<Error + 'static>> {
-		// run_async requires 'static future
-		tokio::run_async(login_impl(session, id, pw));
+	fn login(id: &str, pw: &str) -> Result<(), Box<Error>> {
+		tokio::run_async(login_impl(id.to_owned(), pw.to_owned()));
 		Ok(())
 	}
 }

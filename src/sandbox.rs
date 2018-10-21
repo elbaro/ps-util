@@ -45,16 +45,16 @@ pub fn set_limits(limit: &Limitation) -> Result<(), Box<Error>> {
 		// }
 
 		// single thread
-		if setrlimit(
-			libc::RLIMIT_NPROC,
-			&rlimit {
-				rlim_cur: 1,
-				rlim_max: 1,
-			},
-		) < 0
-		{
-			return Err("error setting limit".into());
-		}
+		// if setrlimit(
+		// 	libc::RLIMIT_NPROC,
+		// 	&rlimit {
+		// 		rlim_cur: 1,
+		// 		rlim_max: 1,
+		// 	},
+		// ) < 0
+		// {
+		// 	return Err("error setting limit".into());
+		// }
 
 		// memory
 		if let Some(m) = limit.memory_mb {
