@@ -146,8 +146,8 @@ fn main() {
 			}
 
 			let limit = Limitation { time, memory_mb };
-
-			runner::eval(solution, data_dir, in_filter, out_filter, &limit).unwrap();
+			let ignore_cr: bool = sub.matches.is_present("loose");
+			runner::eval(solution, data_dir, in_filter, out_filter, &limit, ignore_cr).unwrap();
 		}
 		"new" => {
 			// psutil new dir/prob1 --python

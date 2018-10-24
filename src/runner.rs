@@ -32,6 +32,13 @@ pub enum JudgeResult {
 	RuntimeError,
 }
 
+pub struct EvalConfig<'a> {
+	cmd: &'a str,
+	args: Vec<String>,
+	limit: &'a Limitation,
+	ignore_cr: bool,
+}
+
 pub fn validate_data<P1: AsRef<Path>, P2: AsRef<Path>>(exe_path: P1, data_path: P2) -> Result<()> {
 	let data_path = data_path.as_ref();
 	let f: File = File::open(&data_path).expect("fail to open file");
@@ -102,47 +109,29 @@ pub fn validate<P: AsRef<Path>>(exe_path: P, paths: Vec<&str>, filter: Option<&s
 	Ok(())
 }
 
-pub fn eval_case<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
-	solution: P1,
-	input: P2,
-	answer: P3,
-	limit: &Limitation,
+pub fn eval_case<P1: AsRef<Path>, P2: AsRef<Path>>(
+	input: P1,
+	answer: P2,
+	config: &EvalConfig,
 ) -> Result<JudgeResult> {
 	let input = input.as_ref();
-	let solution: &Path = solution.as_ref();
 	let f: File = File::open(&input).chain_err(|| "fail to open input file")?;
 
 	let answer = File::open(&answer).chain_err(|| "fail to open answer file")?;
-	let child_limit = limit.clone();
+	let child_limit = config.limit.clone();
 
-	let is_java = {
-		let ext: Option<&str> = solution.extension().and_then(|s| s.to_str());
-		ext.is_some() && ext.unwrap() == "class"
-	};
-
-	let mut cmd = {
-		if is_java {
-			let mut c = Command::new("java");
-			let cp = solution.parent().and_then(|p| p.to_str()).unwrap_or(".");
-			let stem = solution.file_stem().unwrap().to_str().unwrap();
-			// println!("{:?}", &["-cp", cp, stem]);
-			c.args(&["-cp", cp, stem]);
-			c
-		} else {
-			Command::new(solution)
-		}
-	};
-	let mut child = cmd
+	let mut child = Command::new(config.cmd)
+		.args(&config.args)
 		.stdin(f)
 		.stdout(Stdio::piped())
 		.before_exec(move || {
 			sandbox::set_limits(&child_limit).unwrap();
 			Ok(())
 		})
-		.spawn()?;
-	// .chain_err(|| "fail to spawn solution process")?; // judge error
+		.spawn()
+		.chain_err(|| "fail to spawn solution process")?;
 
-	let time = Duration::from_float_secs(limit.time.unwrap_or(1.0) as f64);
+	let time = Duration::from_float_secs(config.limit.time.unwrap_or(1.0) as f64);
 	let success = match child
 		.wait_timeout(time)
 		.chain_err(|| "fail to wait for solution process")?
@@ -187,9 +176,44 @@ pub fn eval<P1: AsRef<Path>, P2: AsRef<Path>>(
 	in_filter: &str,
 	out_filter: &str,
 	limit: &Limitation,
+	ignore_cr: bool,
 ) -> Result<()> {
 	println!("{}\n", "Evaluating ..".green());
-	let solution = solution.as_ref();
+
+	let config = {
+		let solution = solution.as_ref();
+
+		if !solution.is_file() {
+			return Err("solution file does not exist")?;
+		}
+
+		let is_java = {
+			let ext: Option<&str> = solution.extension().and_then(|s| s.to_str());
+			ext.is_some() && ext.unwrap() == "class"
+		};
+
+		let (cmd, args) = {
+			if is_java {
+				let cp = solution
+					.parent()
+					.and_then(|p| p.to_str())
+					.unwrap_or(".")
+					.to_string();
+				let stem = solution.file_stem().unwrap().to_str().unwrap().to_string();
+				("java", ["-cp".to_string(), cp, stem].to_vec())
+			} else {
+				(solution.to_str().unwrap(), Vec::new())
+			}
+		};
+		// let ignore_cr = ignore_cr.unwrap_or(cfg!(windows));
+		EvalConfig {
+			cmd,
+			args,
+			limit: &limit,
+			ignore_cr,
+		}
+	};
+
 	let data_dir = data_dir.as_ref();
 	let mut correct = 0;
 	let mut incorrect = 0;
@@ -229,7 +253,7 @@ pub fn eval<P1: AsRef<Path>, P2: AsRef<Path>>(
 
 	for (input, output) in inputs.iter().zip(outputs.iter()) {
 		let relative = input.strip_prefix(data_dir).unwrap_or(input);
-		match eval_case(solution, input, output, limit) {
+		match eval_case(input, output, &config) {
 			Ok(JudgeResult::Correct) => {
 				correct += 1;
 				println!("{:>15} {}", "[Correct]".green(), relative.display());

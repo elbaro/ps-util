@@ -87,6 +87,8 @@ pub fn build_cli() -> App<'static, 'static> {
 						.required(true)
 						.takes_value(true),
 				)
+				// .arg(Arg::with_name("diff").long("diff"))
+				.arg(Arg::with_name("loose").long("loose"))
 				.arg(Arg::with_name("eval").long("eval").takes_value(true))
 				.arg(Arg::with_name("time-limit").long("time").takes_value(true))
 				.arg(
