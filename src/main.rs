@@ -1,7 +1,4 @@
-#![feature(duration_float)]
-#![feature(await_macro, async_await, futures_api)]
-#[macro_use]
-extern crate tokio;
+// #![feature(duration_float)]
 
 use piston_window::*;
 use std::path::Path;
@@ -44,7 +41,7 @@ fn show() {
 		.build()
 		.unwrap();
 	while let Some(event) = window.next() {
-		window.draw_2d(&event, |context, graphics| {
+		window.draw_2d(&event, |context, graphics, _| {
 			clear([1.0; 4], graphics);
 			rectangle(
 				[1.0, 0.0, 0.0, 1.0], // red

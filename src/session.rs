@@ -7,7 +7,7 @@ use std::error::Error;
 use std::process::Child;
 use std::process::{Command, Stdio};
 // use time::{now_utc, Tm};
-use tokio::prelude::Future;
+use std::future::Future;
 use url::Url;
 
 struct BrowserGuard(Child);
@@ -29,7 +29,7 @@ pub struct Session {
 }
 
 impl Session {
-	pub fn new() -> Result<Self, Box<Error>> {
+	pub fn new() -> Result<Self, failure::Error> {
 		let browser = BrowserGuard(
 			// Command::new("chromedriver")
 			Command::new("geckodriver")
@@ -58,7 +58,7 @@ impl Session {
 		self.last_url = None;
 	}
 
-	pub fn get(&mut self, url: &Url) -> Result<Response, Box<Error>> {
+	pub fn get(&mut self, url: &Url) -> Result<Response, failure::Error> {
 		let res = reqwest::get(url.as_str())?;
 		for raw_cookie in res.headers().get_all(reqwest::header::SET_COOKIE) {
 			let mut cookie = Cookie::parse(raw_cookie.to_str()?.to_string()).expect("burnt cookie");
@@ -81,7 +81,7 @@ impl Session {
 		&mut self,
 		url: &Url,
 		form: Option<&T>,
-	) -> Result<Response, Box<Error>> {
+	) -> Result<Response, failure::Error> {
 		let mut req = self.client.post(url.as_str());
 		let host = url.host_str().unwrap();
 		for cookie in self.jar.iter() {

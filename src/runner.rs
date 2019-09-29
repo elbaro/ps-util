@@ -7,7 +7,6 @@ use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::time::Duration;
-use strum_macros::Display;
 use wait_timeout::ChildExt;
 use walkdir::WalkDir;
 
@@ -23,7 +22,7 @@ error_chain!{
 	}
 }
 
-#[derive(Display)]
+#[derive(Debug)]
 pub enum JudgeResult {
 	Correct,
 	WrongAnswer,
@@ -131,7 +130,7 @@ pub fn eval_case<P1: AsRef<Path>, P2: AsRef<Path>>(
 		.spawn()
 		.chain_err(|| "fail to spawn solution process")?;
 
-	let time = Duration::from_float_secs(config.limit.time.unwrap_or(1.0) as f64);
+	let time = Duration::from_secs_f64(config.limit.time.unwrap_or(1.0) as f64);
 	let success = match child
 		.wait_timeout(time)
 		.chain_err(|| "fail to wait for solution process")?
@@ -262,7 +261,7 @@ pub fn eval<P1: AsRef<Path>, P2: AsRef<Path>>(
 				incorrect += 1;
 				println!(
 					"{:>15} {}",
-					format!("[{}]", reason).red(),
+					format!("[{:?}]", reason).red(),
 					relative.display()
 				);
 			}

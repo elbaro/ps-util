@@ -15,15 +15,15 @@ pub trait ProblemHandle {
 	fn get_submit_url(&self) -> String;
 
 	// fn text_description(&self);
-	fn submit<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<Error>> {
+	fn submit<P: AsRef<Path>>(&self, path: P) -> Result<(), failure::Error> {
 		let path = path.as_ref();
 		let url = self.get_submit_url();
 		unimplemented!();
 		// client.post(url).unwrap();
 	}
-	fn download<P: AsRef<Path>>(&self, dir: P) -> Result<(), Box<Error>>;
+	fn download<P: AsRef<Path>>(&self, dir: P) -> Result<(), failure::Error>;
 }
 
 pub trait Site {
-	fn login(id: &str, pw: &str) -> Result<(), Box<Error>>;
+	fn login(id: &str, pw: &str) -> Result<(), failure::Error>;
 }

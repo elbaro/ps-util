@@ -1,6 +1,8 @@
 use num_traits::{Num, Zero};
 use rand::distributions::Uniform;
 use rand::Rng;
+use rand::seq::SliceRandom;
+
 
 pub struct Range<X> {
 	pub low: X,
@@ -46,7 +48,7 @@ where
 		}
 	}
 
-	rng.shuffle(&mut edges);
+	(&mut edges[..]).shuffle(&mut rng);
 	for e in &mut edges {
 		if rng.sample(&binary) == 0 {
 			std::mem::swap(&mut e.0, &mut e.1);
@@ -114,7 +116,8 @@ where
 	let (minx, mut xs) = generate_chains();
 	let (miny, ys) = generate_chains();
 
-	rng.shuffle(&mut xs);
+	(&mut xs[..]).shuffle(&mut rng);
+	// rng.shuffle(&mut xs);
 	// rng.shuffle(&mut ys);
 	let mut vec: Vec<(X, X)> = (0..n).map(|i| (xs[i], ys[i])).collect();
 

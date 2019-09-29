@@ -1,5 +1,5 @@
 use clap::{App, AppSettings, Arg, ArgGroup, SubCommand};
-use indoc::{indoc, indoc_impl};
+use indoc::indoc;
 
 pub fn build_cli() -> App<'static, 'static> {
 	App::new("psutil")

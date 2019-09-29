@@ -29,7 +29,7 @@ fn sanitize_file<P: AsRef<Path>>(path: P, confirmed: bool) -> Result<bool, Box<E
 		let reader = BufReader::new(f);
 		let mut it = reader.bytes();
 		let mut cr = false;
-		let mut last: u8 = b'\n';
+		let mut last: u8 = 0;
 		while let Some(b) = it.next() {
 			let b = b?;
 			// ascii range? 127=DEL

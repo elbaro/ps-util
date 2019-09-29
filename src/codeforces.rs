@@ -5,7 +5,6 @@ use crate::session::Session;
 use select::{document::Document, predicate::Class};
 // use selenium_rs::webdriver::{Browser, Selector, WebDriver};
 use fantoccini::{Client as Driver, Locator};
-use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -63,7 +62,7 @@ impl judge::ProblemHandle for ProblemHandle {
 			format!("https://codeforces.com/gym/{}/problem/{}", self.0, self.1)
 		}
 	}
-	fn download<P: AsRef<Path>>(&self, dir: P) -> Result<(), Box<Error>> {
+	fn download<P: AsRef<Path>>(&self, dir: P) -> Result<(), failure::Error> {
 		let dir = dir.as_ref();
 		let url = self.get_problem_url();
 		let html_read = reqwest::get(&url)?;
@@ -100,7 +99,7 @@ impl judge::ProblemHandle for ProblemHandle {
 		Ok(())
 	}
 
-	fn submit<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<Error>> {
+	fn submit<P: AsRef<Path>>(&self, path: P) -> Result<(), failure::Error> {
 		let mut session = Session::new()?;
 		println!("this is submit()");
 		Codeforces::login("aa", "bb")?;
@@ -137,7 +136,7 @@ impl judge::ProblemHandle for ProblemHandle {
 	}
 }
 
-async fn login_async<'a>(id: String, pw: String) -> Result<(), Box<Error + 'static>> {
+async fn login_async<'a>(id: String, pw: String) -> Result<(), failure::Error> {
 	// let mut driver: Driver = unsafe { std::mem::uninitialized() };
 	// std::mem::swap(&mut session.driver, &mut driver);
 
@@ -149,13 +148,13 @@ async fn login_async<'a>(id: String, pw: String) -> Result<(), Box<Error + 'stat
 	)?;
 
 	println!("connecting to driver ..");
-	let mut driver = await!(Driver::with_capabilities("http://localhost:4444", cap))?;
+	// let mut driver = await!(Driver::with_capabilities("http://localhost:4444", cap))?;
 	println!("connecting to driver .. done");
-	let mut driver = await!(driver.goto("https://codeforces.com/enter"))?;
-	let mut f = await!(driver.form(Locator::Css("#enterForm")))?;
-	await!(f.set_by_name("handleOrEmail", "abc"))?;
-	await!(f.set_by_name("password", "abcefg"))?;
-	await!(f.submit())?;
+	// let mut driver = await!(driver.goto("https://codeforces.com/enter"))?;
+	// let mut f = await!(driver.form(Locator::Css("#enterForm")))?;
+	// await!(f.set_by_name("handleOrEmail", "abc"))?;
+	// await!(f.set_by_name("password", "abcefg"))?;
+	// await!(f.submit())?;
 
 	std::thread::sleep_ms(5000);
 
@@ -173,19 +172,22 @@ async fn login_async<'a>(id: String, pw: String) -> Result<(), Box<Error + 'stat
 }
 
 async fn login_impl(id: String, pw: String) {
-	match await!(login_async(id, pw)) {
-		Ok(()) => {}
-		Err(err) => {
-			eprintln!("login error: {}", err);
-		}
-	};
+	// match await!(login_async(id, pw)) {
+	// 	Ok(()) => {}
+	// 	Err(err) => {
+	// 		eprintln!("login error: {}", err);
+	// 	}
+	// };
 }
 
 pub struct Codeforces {}
 
 impl judge::Site for Codeforces {
-	fn login(id: &str, pw: &str) -> Result<(), Box<Error>> {
-		tokio::run_async(login_impl(id.to_owned(), pw.to_owned()));
+	fn login(id: &str, pw: &str) -> Result<(), failure::Error> {
+		let mut rt = tokio::runtime::Runtime::new().unwrap();
+		rt.block_on(async {
+			login_impl(id.to_owned(), pw.to_owned()).await;
+		});
 		Ok(())
 	}
 }
