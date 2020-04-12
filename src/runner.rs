@@ -222,7 +222,7 @@ pub fn eval<P1: AsRef<Path>, P2: AsRef<Path>>(
 		let mut v: Vec<_> = WalkDir::new(data_dir)
 			.into_iter()
 			.map(|e| e.expect("fail to list dir").into_path())
-			.filter(|p| p.file_name().unwrap().to_str().unwrap().contains(in_filter))
+			.filter(|p| p.file_name().expect(&format!("no file name: {:?}", p.canonicalize())).to_str().expect("non-utf8").contains(in_filter))
 			.collect();
 		v.sort();
 		v
