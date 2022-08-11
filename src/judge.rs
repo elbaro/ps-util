@@ -1,5 +1,5 @@
-use crate::session::Session;
-use std::error::Error;
+
+
 use std::path::Path;
 
 pub trait CollectionHandle {
@@ -16,8 +16,8 @@ pub trait ProblemHandle {
 
 	// fn text_description(&self);
 	fn submit<P: AsRef<Path>>(&self, path: P) -> Result<(), failure::Error> {
-		let path = path.as_ref();
-		let url = self.get_submit_url();
+		let _path = path.as_ref();
+		let _url = self.get_submit_url();
 		unimplemented!();
 		// client.post(url).unwrap();
 	}

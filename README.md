@@ -1,3 +1,5 @@
+`ps-util` is a CLI tool for algorithm problem solving (TopCoder, Codeforces, ACM-ICPC, ..). It can generate common test cases such as tree, or 2d points. Also you can judge your solution against the test cases.
+
 ## Install
 ```
 cargo install --git https://github.com/elbaro/ps-util

@@ -5,7 +5,7 @@ use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::Path;
 use walkdir::WalkDir;
 
-fn sanitize_file<P: AsRef<Path>>(path: P, confirmed: bool) -> Result<bool, Box<Error>> {
+fn sanitize_file<P: AsRef<Path>>(path: P, confirmed: bool) -> Result<bool, Box<dyn Error>> {
 	// 1. already good
 	// 2. sanitized
 	// 3. error

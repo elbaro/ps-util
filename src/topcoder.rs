@@ -61,7 +61,7 @@ impl judge::ProblemHandle for ProblemHandle {
 			format!("https://codeforces.com/gym/{}/problem/{}", self.0, self.1)
 		}
 	}
-	fn download<P: AsRef<Path>>(&self, dir: P) -> Result<(), Box<Error>> {
+	fn download<P: AsRef<Path>>(&self, dir: P) -> Result<(), Box<dyn Error>> {
 		let dir = dir.as_ref();
 		let url = self.get_problem_url();
 		let html_read = reqwest::get(&url)?;
@@ -98,7 +98,7 @@ impl judge::ProblemHandle for ProblemHandle {
 		Ok(())
 	}
 
-	fn submit<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<Error>> {
+	fn submit<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<dyn Error>> {
 		let path = path.as_ref();
 		let login = &Url::parse("https://algospot.com/accounts/login/")?;
 		let login = &Url::parse("https://codeforces.com/enter")?;

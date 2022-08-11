@@ -7,7 +7,7 @@ pub struct Limitation {
 	pub memory_mb: Option<u64>,
 }
 
-pub fn set_limits(limit: &Limitation) -> Result<(), Box<Error>> {
+pub fn set_limits(limit: &Limitation) -> Result<(), Box<dyn Error>> {
 	// time
 	let time = limit.time.unwrap_or(1.0).ceil() as u64;
 
