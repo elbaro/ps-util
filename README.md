@@ -1,4 +1,4 @@
-`ps-util` is a CLI tool for algorithm problem solving (TopCoder, Codeforces, ACM-ICPC, ..). It can generate common test cases such as tree, or 2d points. Also you can judge your solution against the test cases.
+`ps-util` is a CLI tool for algorithm problem solving (TopCoder, Codeforces, ACM-ICPC, ..). It can generate common test cases such as tree, graph or 2d points. Also you can judge your solution against the test cases.
 
 ## Install
 ```
@@ -20,7 +20,7 @@ psutil generate convex 100 -f -100 100
 | **generate** |             |                                           | note                                                     |
 | ------------ | ----------- | ----------------------------------------- | -------------------------------------------------------- |
 |              | **tree**    | `<n>` (-i min max) (-f min max)             | uniform sampling                                         |
-|              | graph (WIP) | `<n>` (<m>) (--connected) (--directed)      |                                                          |
+|              | graph (WIP) | `<n>` (`<m>`) (--connected) (--directed)      |                                                          |
 |              | **convex**  | `<n>` (-i min max) (-f min max)             | uniform sampling, not uniform when using int coordinates |
 |              | **points**  | `<n>` (--no-same) (-i min max) (-f min max) |                                                          |
 |              |             |                                           |                                                          |
